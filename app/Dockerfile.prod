@@ -12,15 +12,17 @@ WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install psycopg2 dependencies
+# install psycopg2 and Pillow dependencies
 RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev
-
+    && apk add postgresql-dev gcc python3-dev musl-dev \
+    build-base \
+    jpeg-dev \
+    zlib-dev
 # lint
 RUN pip install --upgrade pip
 RUN pip install flake8
-COPY . .
 RUN flake8 --ignore=E501,F401 .
+COPY . .
 
 # install dependencies
 COPY ./requirements.txt .
@@ -45,10 +47,14 @@ ENV HOME=/home/app
 ENV APP_HOME=/home/app/web
 RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
+RUN mkdir $APP_HOME/mediafiles
 WORKDIR $APP_HOME
 
 # install dependencies
-RUN apk update && apk add libpq
+RUN apk update && apk add libpq \
+    build-base \
+    jpeg-dev \
+    zlib-dev
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
